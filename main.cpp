@@ -7,6 +7,8 @@
 
 using namespace std;
 
+//TODO: safe send
+
 static inline string trim(const string &s) {
     auto wsfront = find_if_not(s.begin(), s.end(), [](int c){ return isspace(c); });
     auto wsback = find_if_not(s.rbegin(), s.rend(), [](int c){ return isspace(c); }).base();
@@ -124,6 +126,7 @@ int main(int argc, char *argv[]) {
                 cout << "Использование: join <канал>" << endl;
                 continue;
             }
+
             if (new_channel.size() > 24) {
                 cout << "Имя канала слишком длинное (максимум 24 символа)" << endl;
                 continue;
@@ -159,7 +162,7 @@ int main(int argc, char *argv[]) {
             break;
         }
 
-        if (response.rfind("OK", 0) == 0) {
+        if (response.rfind("OK", 0) == 0) { // maybe needs refactoring
             if (cmd == "read") {
                 istringstream rs(response);
                 string ok;
