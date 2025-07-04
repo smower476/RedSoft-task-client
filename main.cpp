@@ -31,10 +31,12 @@ int main(int argc, char *argv[]) {
         cerr << "Использование: client <server_ip> <port> <channel>" << endl;
         return 1;
     }
+
     string server_ip = argv[1];
     int port = stoi(argv[2]);
-    string channel = argv[3];
-    if (channel.size() > 24) {
+    string current_channel = argv[3];
+
+    if (current_channel.size() > 24) {
         cerr << "Имя канала слишком длинное (максимум 24 символа)" << endl;
         return 1;
     }
@@ -53,6 +55,7 @@ int main(int argc, char *argv[]) {
         perror("socket");
         return 1;
     }
+
     sockaddr_in serv_addr;
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons(port);
@@ -60,12 +63,14 @@ int main(int argc, char *argv[]) {
         cerr << "Неверный адрес сервера" << endl;
         return 1;
     }
+
     if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
         perror("connect");
         return 1;
     }
+
     cout << "Подключен к серверу " << server_ip << ":" << port 
-         << ", канал: " << channel << endl;
+         << ", начальный канал: " << current_channel << endl;
 
     string line;
     while (true) {
@@ -76,9 +81,11 @@ int main(int argc, char *argv[]) {
         if (line == "quit") {
             break;
         }
+
         istringstream iss(line);
         string cmd;
         iss >> cmd;
+
         if (cmd == "send") {
             string msg;
             getline(iss, msg);
@@ -87,19 +94,42 @@ int main(int argc, char *argv[]) {
                 cout << "Использование: send <сообщение>" << endl;
                 continue;
             }
-            string request = "send " + channel + " " + nick + " " + msg + "\n";
+            string request = "send " + current_channel + " " + nick + " " + msg + "\n";
             send(sock, request.c_str(), request.size(), 0);
         }
         else if (cmd == "read") {
-            string request = "read " + channel + " " + nick + "\n";
+            string request = "read " + current_channel + " " + nick + "\n";
             send(sock, request.c_str(), request.size(), 0);
         }
         else if (cmd == "join") {
-            string request = "join " + channel + " " + nick + "\n";
+            string new_channel;
+            iss >> new_channel;
+            if (new_channel.empty()) {
+                cout << "Использование: join <канал>" << endl;
+                continue;
+            }
+            if (new_channel.size() > 24) {
+                cout << "Имя канала слишком длинное (максимум 24 символа)" << endl;
+                continue;
+            }
+            string request = "join " + new_channel + " " + nick + "\n";
             send(sock, request.c_str(), request.size(), 0);
+
+            string response;
+            if (!recvLine(sock, response)) {
+                cout << "Отключено от сервера." << endl;
+                break;
+            }
+            if (response.rfind("OK", 0) == 0) {
+                current_channel = new_channel;
+                cout << "Вы присоединились к каналу: " << current_channel << endl;
+            } else {
+                cout << "Ошибка при присоединении: " << response << endl;
+            }
+            continue; 
         }
         else if (cmd == "exit") {
-            string request = "exit " + channel + " " + nick + "\n";
+            string request = "exit " + current_channel + " " + nick + "\n";
             send(sock, request.c_str(), request.size(), 0);
         }
         else {
@@ -112,13 +142,14 @@ int main(int argc, char *argv[]) {
             cout << "Отключено от сервера." << endl;
             break;
         }
+
         if (response.rfind("OK", 0) == 0) {
             if (cmd == "read") {
                 istringstream rs(response);
                 string ok;
                 int count;
                 rs >> ok >> count;
-                cout << "Последние " << count << " сообщений в канале '" << channel << "':" << endl;
+                cout << "Последние " << count << " сообщений в канале '" << current_channel << "':" << endl;
                 for (int i = 0; i < count; i++) {
                     if (!recvLine(sock, response)) break;
                     cout << response << endl;
@@ -134,7 +165,9 @@ int main(int argc, char *argv[]) {
             cout << "Неожиданный ответ: " << response << endl;
         }
     }
+
     close(sock);
     cout << "Клиент завершил работу." << endl;
     return 0;
 }
+
