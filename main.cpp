@@ -14,6 +14,16 @@ static inline string trim(const string &s) {
     return string(wsfront, wsback);
 }
 
+static inline bool isValidNick(const string &nick) {
+    for (char c : nick) {
+        if (!isalnum(c) && c != '_') {
+            return false;
+        }
+    }
+    return true;
+}
+
+
 bool recvLine(int sock, string &out) {
     out.clear();
     char c;
@@ -41,13 +51,19 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    cout << "Введите ваш ник (max 24 символа): ";
     string nick;
-    getline(cin, nick);
-    nick = trim(nick);
-    if (nick.empty() || nick.size() > 24) {
-        cerr << "Неверный ник" << endl;
-        return 1;
+
+    while (true) {
+        cout << "Введите ваш ник (max 24 символа): ";
+        getline(cin, nick);
+        nick = trim(nick);
+
+        if (nick.empty() || nick.size() > 24 || !isValidNick(nick)) {
+            cerr << "Неверный ник, попробуйсте снова" << endl;
+        } 
+        else {
+            break;
+        }
     }
 
     int sock = socket(AF_INET, SOCK_STREAM, 0);
