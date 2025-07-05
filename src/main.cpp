@@ -34,8 +34,8 @@ int main(int argc, char *argv[]) {
     if (!parseArguments(argc, argv, server_ip, port, channel)) return 1;
 
     string nick = inputNickname();
-    int sock = connectToServer(server_ip, port);
-    if (sock < 0) return 1;
+    int sock = connectToServer(server_ip, port, 3);
+    if (sock < 0) return 2;
 
     cout << "Подключен к серверу " << server_ip << ":" << port
          << ", начальный канал: " << channel << endl;
@@ -43,6 +43,5 @@ int main(int argc, char *argv[]) {
     commandLoop(sock, channel, nick);
 
     close(sock);
-    cout << "Клиент завершил работу." << endl;
     return 0;
 }
