@@ -1,9 +1,10 @@
+#include "../include/connection.h"
 #include "../include/commands.h"
 #include "../include/validation.h"
-#include "../include/connection.h"
 #include <iostream>
 #include <unistd.h>
 #include <sys/socket.h>
+#include <poll.h>
 #include <sstream>
 
 using namespace std;
@@ -17,8 +18,8 @@ bool handleSend(int sock, const string &channel, const string &nick, istringstre
         return true;
     }
     string request = "send " + channel + " " + nick + " " + msg + "\n";
-    if (send(sock, request.c_str(), request.size(), 0) < 0) {
-        perror("send");
+    if (!safe_send(sock, request, 3000)) {
+        cout << "Не удалось отправить сообщение." << endl;
         return false;
     }
     return true;
@@ -26,8 +27,8 @@ bool handleSend(int sock, const string &channel, const string &nick, istringstre
 
 bool handleRead(int sock, const string &channel, const string &nick) {
     string request = "read " + channel + " " + nick + "\n";
-    if (send(sock, request.c_str(), request.size(), 0) < 0) {
-        perror("send");
+    if (!safe_send(sock, request, 3000)) {
+        cout << "Не удалось отправить запрос на чтение." << endl;
         return false;
     }
 
@@ -68,8 +69,8 @@ bool handleJoin(int sock, string &channel, const string &nick, istringstream &is
     }
 
     string request = "join " + new_channel + " " + nick + "\n";
-    if (send(sock, request.c_str(), request.size(), 0) < 0) {
-        perror("send");
+    if (!safe_send(sock, request, 3000)) {
+        cout << "Не удалось отправить запрос на присоединение." << endl;
         return false;
     }
 
@@ -91,7 +92,11 @@ bool handleJoin(int sock, string &channel, const string &nick, istringstream &is
 
 bool handleExit(int sock, const string &channel, const string &nick) {
     string request = "exit " + channel + " " + nick + "\n";
-    return send(sock, request.c_str(), request.size(), 0) >= 0;
+    if (!safe_send(sock, request, 3000)) {
+        cout << "Не удалось отправить запрос выхода." << endl;
+        return false;
+    }
+    return true;
 }
 
 void commandLoop(int sock, string &channel, const string &nick) {
