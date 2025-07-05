@@ -17,11 +17,25 @@ bool handleSend(int sock, const string &channel, const string &nick, istringstre
         cout << "Использование: send <сообщение>" << endl;
         return true;
     }
+
     string request = "send " + channel + " " + nick + " " + msg + "\n";
     if (!safe_send(sock, request, 3000)) {
         cout << "Не удалось отправить сообщение." << endl;
         return false;
     }
+
+    {
+        string response;
+        if (!recvLine(sock, response)) {
+            cout << "Отключено от сервера после send." << endl;
+            return false;
+        }
+        if (response.rfind("OK", 0) == 0) {
+        } else {
+            cout << "Ошибка сервера при send: " << response << endl;
+        }
+    }
+
     return true;
 }
 
