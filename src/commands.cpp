@@ -24,16 +24,14 @@ bool handleSend(int sock, const string &channel, const string &nick, istringstre
         return false;
     }
 
-    {
-        string response;
-        if (!recvLine(sock, response)) {
-            cout << "Отключено от сервера после send." << endl;
-            return false;
-        }
-        if (response.rfind("OK", 0) == 0) {
-        } else {
-            cout << "Ошибка сервера при send: " << response << endl;
-        }
+    string response;
+    if (!recvLine(sock, response)) {
+        cout << "Отключено от сервера после send." << endl;
+        return false;
+    }
+    if (response.rfind("OK", 0) == 0) {
+    } else {
+        cout << "Ошибка сервера при send: " << response << endl;
     }
 
     return true;
@@ -76,7 +74,6 @@ bool handleJoin(int sock, string &channel, const string &nick, istringstream &is
         cout << "Использование: join <канал>" << endl;
         return true;
     }
-
     if (new_channel.size() > 24) {
         cout << "Имя канала слишком длинное (максимум 24 символа)" << endl;
         return true;
@@ -93,7 +90,6 @@ bool handleJoin(int sock, string &channel, const string &nick, istringstream &is
         cout << "Отключено от сервера." << endl;
         return false;
     }
-
     if (response.rfind("OK", 0) == 0) {
         channel = new_channel;
         cout << "Вы присоединились к каналу: " << channel << endl;
@@ -109,6 +105,16 @@ bool handleExit(int sock, const string &channel, const string &nick) {
     if (!safe_send(sock, request, 3000)) {
         cout << "Не удалось отправить запрос выхода." << endl;
         return false;
+    }
+    string response;
+    if (!recvLine(sock, response)) {
+        cout << "Отключено от сервера после exit." << endl;
+        return false;
+    }
+    if (response.rfind("OK", 0) == 0) {
+        cout << "Вы вышли из канала: " << channel << endl;
+    } else {
+        cout << "Ошибка при выходе: " << response << endl;
     }
     return true;
 }

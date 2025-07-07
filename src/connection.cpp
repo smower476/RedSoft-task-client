@@ -111,26 +111,32 @@ int connectToServer(const string &ip, int port, int timeout_ms) {
     return sock;
 }
 
-bool recvLine(int sock, string &out, int timeout_ms) {
+bool recvLine(int sock, std::string &out, int timeout_ms) {
     out.clear();
     char c;
 
     while (true) {
         pollfd pfd{sock, POLLIN, 0};
-        int res = poll(&pfd, 1, timeout_ms );
+        int res = poll(&pfd, 1, timeout_ms);
         if (res <= 0) {
-            if (res == 0) cerr << "recvLine: timeout\n";
-            else perror("poll");
+            if (res == 0) {
+                std::cerr << "recvLine: timeout\n";
+            } else {
+                std::cerr << "recvLine: poll error: " << std::strerror(errno) << "\n";
+            }
             return false;
         }
 
         ssize_t r = recv(sock, &c, 1, 0);
         if (r < 0) {
             if (errno == EINTR) continue;
-            perror("recv");
+            std::cerr << "recvLine: recv error: " << std::strerror(errno) << "\n";
             return false;
         }
-        if (r == 0) return false; 
+        if (r == 0) {
+            std::cerr << "recvLine: connection closed by peer\n";
+            return false;
+        }
 
         if (c == '\n') break;
         if (c != '\r') out.push_back(c);
@@ -138,3 +144,4 @@ bool recvLine(int sock, string &out, int timeout_ms) {
 
     return true;
 }
+
