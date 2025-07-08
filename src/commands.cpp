@@ -19,7 +19,7 @@ bool handleSend(int sock, const string &channel, const string &nick, istringstre
     }
 
     string request = "send " + channel + " " + nick + " " + msg + "\n";
-    if (!safe_send(sock, request, 3000)) {
+    if (!safe_send(sock, request)) {
         cout << "Не удалось отправить сообщение." << endl;
         return false;
     }
@@ -39,7 +39,7 @@ bool handleSend(int sock, const string &channel, const string &nick, istringstre
 
 bool handleRead(int sock, const string &channel, const string &nick) {
     string request = "read " + channel + " " + nick + "\n";
-    if (!safe_send(sock, request, 3000)) {
+    if (!safe_send(sock, request)) {
         cout << "Не удалось отправить запрос на чтение." << endl;
         return false;
     }
@@ -80,7 +80,7 @@ bool handleJoin(int sock, string &channel, const string &nick, istringstream &is
     }
 
     string request = "join " + new_channel + " " + nick + "\n";
-    if (!safe_send(sock, request, 3000)) {
+    if (!safe_send(sock, request)) {
         cout << "Не удалось отправить запрос на присоединение." << endl;
         return false;
     }
@@ -102,7 +102,7 @@ bool handleJoin(int sock, string &channel, const string &nick, istringstream &is
 
 bool handleExit(int sock, const string &channel, const string &nick) {
     string request = "exit " + channel + " " + nick + "\n";
-    if (!safe_send(sock, request, 3000)) {
+    if (!safe_send(sock, request)) {
         cout << "Не удалось отправить запрос выхода." << endl;
         return false;
     }
